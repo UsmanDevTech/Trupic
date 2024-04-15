@@ -1,0 +1,226 @@
+﻿
+@{
+    ViewBag.Title = "Earnings";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content mb-4">
+    <div class="container-fluid">
+        <div class="row clearfix">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="card">
+                    <div class="header">
+                        <div style="display:flex;flex-direction:row">
+                            <h2>
+                                <strong>Earnings </strong>Detail
+
+                            </h2>
+                        </div>
+                    </div>
+                    <div class="body">
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered dataTable" id="example_4">
+                                <thead style="white-space:nowrap">
+                                    <tr>
+                                        <th style="z-index:999;">Picture</th>
+                                        <th>Name</th>
+                                        <th>Package Info</th>
+                                        <th>Total Paid Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody style="white-space:nowrap" id="divtbl">
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3">Total</td>
+                                        <td colspan="1">
+                                            <span id="totalPaidAmount"></span>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div style="" class="modal fade bs-example-modal-md" id="pckDtls" tabindex="-1" role="dialog" aria-labelledby="pckDtls" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="formModal">Packages Detail</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">x</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered dataTable" id="pckDtlsTable">
+                            <thead style="white-space:nowrap">
+                                <tr>
+                                    <th style="z-index:999;">Title</th>
+                                    <th>Purchased At</th>
+                                    <th>Expire At</th>
+                                    <th>Status</th>
+                                    <th>Amount Paid</th>
+                                </tr>
+                            </thead>
+                            <tbody style="white-space:nowrap" id="pckDtlsBody">
+                            </tbody>
+
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div><!-- /.modal -->
+    </div>
+
+
+</section>
+
+
+
+<script>
+
+    $('#earnings_li').addClass("active");
+
+
+    $(function () {
+
+        loadData();
+    })
+
+    function loadData() {
+
+        var userIds = [];
+        $('#example_4').DataTable().destroy();
+        $("#divtbl").html('');
+        var sum = 0;
+
+        db.collection("package_history").onSnapshot(function (querysnapshot) {
+            if (querysnapshot.size > 0) {
+
+                var s = querysnapshot.docs.map(doc => {
+                    return doc.data();
+                });
+
+                s.forEach((d) => {
+
+                    if (!userIds.includes(d.user_id)) {
+                        $("#divtbl").append('<tr><td><a class="image-popup-vertical-fit" data-usrpichref="' + d.user_id + '"><img  data-usrpic="' + d.user_id + '" width="35" height="35"></a></td><td><div data-usrname="' + d.user_id + '"></div></td><td><a class="btn-sm btn-primary px-3 py-2 cursor-pointer pckDtls" data-id="' + d.user_id + '"><i class="fas fa-box text-white"></i></a></td><td data-userTotal="' + d.user_id + '"></td></tr>');
+                        userIds.push(d.user_id);
+                    }
+                    sum += d.amount_paid;
+
+                    if (s.indexOf(d) == s.length - 1) {
+                        userDetails(userIds, sum);
+                    }
+                })
+            }
+            else $("#example_4").DataTable();
+        });
+    }
+
+
+    function userDetails(l, sum) {
+        if (l.length > 0) {
+            l.forEach((id) => {
+                db.collection("user").doc(id).get().then((doc) => {
+                    if (doc.exists) {
+                        var data = doc.data();
+
+                        if (data.profile_pic != "") {
+                            image = data.profile_pic;
+                        } else {
+                            image = "/assets/img/user.png";
+                        }
+                        $("#divtbl").find('[data-usrpichref="' + id + '"]').attr("href", image);
+                        $("#divtbl").find('[data-usrpic="' + id + '"]').attr("src", image);
+                        $("#divtbl").find('[data-usrname="' + id + '"]').html(data.first_name + " " + data.last_name);
+
+                        updatetotal(id);
+
+                        if (l.indexOf(id) == l.length - 1) {
+                            $("#totalPaidAmount").html("$" + sum.toFixed(2));
+
+                            var table = $('#example_4').DataTable({ "lengthMenu": [[5, 15, 50, -1], [5, 15, 50, "All"]] });
+                            $.fn.dataTable.ext.search.pop();
+                            table.draw();
+                            $('.image-popup-vertical-fit').magnificPopup({
+                                type: 'image',
+                                closeOnContentClick: true,
+                                mainClass: 'mfp-img-mobile',
+                                image: {
+                                    verticalFit: true
+                                }
+                            });
+
+                        }
+                    }
+                })
+
+            });
+        }
+    }
+
+    function updatetotal(id) {
+        var zero = '0';
+        db.collection("package_history").where('user_id', '==', id).get().then((querySnapshot) => {
+
+            if (querySnapshot.size > 0) {
+                s = querySnapshot.docs.map((v) => { return v.data().amount_paid })
+                $("#divtbl").find('[data-userTotal="' + id + '"]').html("$" + s.reduce((t = 0, ce) => { t += ce; return t; }).toFixed(2));
+            }
+            else { $("#divtbl").find('[data-userTotal="' + id + '"]').html("$" + zero.toFixed(2)) };
+        });
+    }
+
+    $(document).on("click", ".pckDtls", function () {
+        var userId = $(this).data('id');
+        $('#pckDtlsTable').DataTable().destroy();
+        $("#pckDtlsBody").html('');
+
+        db.collection("package_history").where('user_id', '==', userId).get().then((doc) => {
+            if (doc.size > 0) {
+
+                var s = doc.docs.map(doc => {
+                    return doc.data();
+                });
+
+                s.forEach((d) => {
+
+                    var purchaseAt = convertStampDate(d.purchased_at.seconds);
+                    var expireAt = convertStampDate(d.expire_at.seconds);
+                    var status = '';
+                    if (d.status == 0) {
+                        status = '<span class="badge text-success">Active</span>';
+                    }
+                    else {
+                        status = '<span class="badge text-danger">Expired</span>';
+                    }
+
+                    var paidAmount = d.amount_paid.toFixed(2);
+                    $("#pckDtlsBody").append('<tr><td>' + d.title + '</td><td><div>' + purchaseAt + '</div></td><td><div>' + expireAt + '</div></td><td>' + status + '</td><td>$' + paidAmount + '</td></tr>');
+               
+                    if (s.indexOf(d) == s.length - 1) {
+                        $("#pckDtlsTable").DataTable();
+                    }
+                })
+            }
+            else $("#pckDtlsTable").DataTable();
+        });
+
+        $('#pckDtls').modal("show");
+
+    });
+
+
+</script>
+

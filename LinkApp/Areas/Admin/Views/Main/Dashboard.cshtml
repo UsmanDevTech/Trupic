@@ -1,0 +1,66 @@
+﻿
+@{
+    ViewBag.Title = "Dashboard";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="block-header">
+            <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    <ul class="breadcrumb breadcrumb-style">
+                        <li class="breadcrumb-item 	bcrumb-1">
+                            <a>
+                                <i class="material-icons">home</i>
+                                Home
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active">Dashboard</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- Widgets -->
+        <div class="row">
+            <a href="@Url.Action("Details","User")" style="cursor:pointer" class="col-lg-3 col-sm-6">
+                <div class="info-box7 l-bg-green order-info-box7">
+                    <div class="info-box7-block" style="max-height:132px;min-height:132px">
+                        <h5 class="m-b-20">Registered Users</h5>
+                        <h2 class="text-right" style="height:32px"><i class="fas fa-users pull-left"></i><span id="User_val"></span></h2>
+                    </div>
+                </div>
+            </a>
+
+            <a href="@Url.Action("Details","User")" style="cursor:pointer" class="col-lg-3 col-sm-6">
+                <div class="info-box7 l-bg-orange order-info-box7">
+                    <div class="info-box7-block" style="max-height:132px;min-height:132px">
+                        <h5 class="m-b-20">Subscribed Users</h5>
+                        <h2 class="text-right" style="height:32px"><i class="fas fa-box pull-left"></i><span id="Subscribed_User"></span></h2>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+        <!-- #END# Widgets -->
+       
+    </div>
+</section>
+
+<script>
+
+    $('#dash_li').addClass("active");
+
+    $(function () {
+
+        db.collection("user").where("subcription_pckg", "==", true).get().then(function (querySnapshot) {
+            $("#Subscribed_User").append(querySnapshot.size);
+        });
+
+        db.collection("user").where("role", "==", 1).get().then(function (querySnapshot) {
+            $("#User_val").append(querySnapshot.size);
+        });
+
+    })
+</script>
+

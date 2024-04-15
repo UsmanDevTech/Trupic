@@ -1,0 +1,874 @@
+﻿
+@{
+    ViewBag.Title = "instaData";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+
+
+<link href="~/Content/assets/css/form.min.css" rel="stylesheet">
+<style>
+    @@media screen and (max-width: 992px) {
+        #tbl_responsive {
+            display: block !important;
+            width: 100% !important;
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row clearfix">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="card">
+                    <div class="header d-sm-flex">
+                        <h2>
+                            <strong>Insta Users</strong> Detail
+                        </h2>
+                        <div class="ml-auto"><input type="search" class="form-control" id="serachField" onkeyup="loadInstaData()" placeholder="search" /></div>
+                    </div>
+                    <div class="body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered dataTable" id="instaDataTable">
+                                <thead style="white-space:nowrap">
+                                    <tr>
+                                        <th style="z-index:999">Picture</th>
+                                        <th style="z-index:999">Name</th>
+                                        <th>Insta Id</th>
+                                        <th>Gender</th>
+                                        <th>followers</th>
+                                        <th>following</th>
+                                        <th>Country</th>
+                                        <th>City</th>
+                                        <th>Verified</th>
+                                        <th>Business</th>
+                                        <th class="text-center">Category</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="instaDataTableBody" style="white-space:nowrap">
+                                </tbody>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div style="" class="modal fade bs-example-modal-md" id="model-al" tabindex="-1" role="dialog" aria-labelledby="model-al" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="formModal">Update Category</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input hidden id="key" />
+                    <div class="form-group">
+                        <label>Assigned Category</label>
+                        <select class="form-control form-control-lg " id="category-select">
+                        </select>
+                        <span class="text-danger" id="category-error"></span>
+                    </div>
+
+                    <div style="float:right">
+                        <button type="button" class="btn bg-red m-t-15 waves-effect text-white" data-dismiss="modal">Close</button>
+                        <button id="addCategoryButton" onclick="editCategory()" class="btn Custom-Badge-Color m-t-15 waves-effect text-white">Update</button>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /.modal -->
+    </div>
+
+    <div style="" class="modal fade bs-example-modal-md" id="pckDtls" tabindex="-1" role="dialog" aria-labelledby="pckDtls" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="formModal">Packages Detail</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">x</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered dataTable" id="pckDtlsTable">
+                            <thead style="white-space:nowrap">
+                                <tr>
+                                    <th style="z-index:999;">Title</th>
+                                    <th>Purchased At</th>
+                                    <th>Expire At</th>
+                                    <th>Status</th>
+                                    <th>Amount Paid</th>
+                                </tr>
+                            </thead>
+                            <tbody style="white-space:nowrap" id="pckDtlsBody">
+                            </tbody>
+
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div><!-- /.modal -->
+    </div>
+
+</section>
+
+<script src="~/Content/assets/js/pages/forms/basic-form-elements.js"></script>
+
+<script>
+    $('#insta_user_li').addClass("active");
+
+    $(function () {
+        loadInstaData()
+    })
+
+
+    function loadInstaData() {
+        var totalrecord;
+
+        var categorylist = [];
+        var image = "/content/assets/images/user/usericon.png";
+
+        var serachVal = $('#serachField').val();
+
+        if ($.fn.dataTable.isDataTable('#instaDataTable')) {
+            $('#instaDataTable').dataTable().fnDestroy();
+        }
+
+        table = $('#instaDataTable')
+            .on('processing.dt', function (e, settings, processing) {
+                if (processing) {
+                    console.log("internal processing");
+                }
+            })
+            .DataTable({
+                fixedHeader: true,
+                "processing": true,
+                "serverSide": true,
+                "searching": false,
+                ajax: function (data, callback, settings) {
+                    var out = [];
+
+                    var i = data.start;
+                    var ien = data.length;
+
+                    var lastVisible;
+
+                    var catsList = [];
+                    db.collection("categories").where('status', '==', true).get().then((querysnapshotss) => {
+                        if (querysnapshotss.size > 0) {
+                            catsList = [];
+
+                            var f = querysnapshotss.docs.map(doc => {
+                                return doc.data();
+                            });
+
+                            f.forEach((d) => {
+                                catsList.push(d.cat_id);
+                            })
+                        }
+                    }).then(() => {
+                        if (serachVal.trim() == '') {
+
+                            db.collection("setting").doc("HkYDqZvIt1r5iLdSEiGb").get().then((querySnapshot) => {
+                                if (querySnapshot.exists) {
+                                    totalrecord = querySnapshot.data().insta_total_count;
+
+                                    if (i == 0) {
+
+                                        db.collection("insta_data").orderBy("followers", "desc").limit(ien).get().then((querySnapshots) => {
+                                            if (querySnapshots.size > 0) {
+
+                                                var s = querySnapshots.docs.map(doc => {
+                                                    return doc.data();
+                                                });
+
+                                                s.forEach((d) => {
+                                                    if (catsList.includes(d.selected_category.cat_id)) {
+
+                                                        var key = d.id;
+
+                                                        var verified = "---";
+                                                        if (d.isverified == "N") verified = "no";
+                                                        else if (d.isverified == "Y") verified = "yes";
+
+
+                                                        var business = "---";
+                                                        if (d.isbusiness == "N") business = "no";
+                                                        else if (d.isbusiness == "Y") business = "yes";
+
+
+                                                        var gender = "---";
+                                                        if (d.gender != null && d.gender != "") {
+                                                            gender = d.gender;
+                                                        }
+
+
+                                                        if (d.photourl != "" || d.photourl != null) {
+                                                            image = d.photourl;
+                                                        }
+
+                                                        var categoryid = d.selected_category;
+                                                        if (categoryid != undefined && categoryid != null) {
+                                                            categoryid = d.selected_category.cat_id;
+                                                            !categorylist.includes(categoryid) ? categorylist.push(categoryid) : ""
+                                                        }
+
+
+                                                        out.push([`<td style="width:8%">
+                                        <a data-row="${categoryid}" class= "image-popup-vertical-fit" href = "${image}">
+                                        <img src="${image}" class="mr-2" width="35" height="35" /></a></td>`,
+                                                        `<td><div class="w-space-no">${d.fullname} (${d.username})</div></td>`,
+                                                        `<td>${d.instaid}</td>`,
+                                                        `<td>${gender}</td>`,
+                                                        `<td>${d.followers}</td>`, `<td>${d.following}</td>`, `<td>${d.countrycode}</td>`,
+                                                        ` <td>${d.city_name}</td>`, `<td>${verified}</td>`, `<td>${business}</td>`,
+                                                        ` <td><div data-cid="${key}"  data-category="${categoryid}">---</td>`,
+                                                        ` <td class="text-center"><a onclick="manageCategory('${key}', '${categoryid}')" class="btn Custom-Badge-Color"><i style="color:white" class="fas fa-edit"></i></a></td>`
+                                                        ]);
+                                                    }
+                                                })
+                                            }
+                                        }).then(() => {
+
+                                            var length = categorylist.length
+                                            if (length > 0) {
+
+                                                setTimeout(function () {
+                                                    callback({
+                                                        draw: data.draw,
+                                                        data: out,
+                                                        recordsTotal: totalrecord,
+                                                        recordsFiltered: totalrecord
+                                                    });
+
+                                                    $('.image-popup-vertical-fit').magnificPopup({
+                                                        type: 'image',
+                                                        closeOnContentClick: true,
+                                                        mainClass: 'mfp-img-mobile',
+                                                        image: {
+                                                            verticalFit: true
+                                                        }
+                                                    });
+
+                                                    categorylist.forEach(function (item) {
+                                                        db.collection("categories").doc(item).get().then((querysnapshotss) => {
+                                                            if (querysnapshotss.exists) {
+                                                                var data = querysnapshotss.data()
+                                                                var name = data.name
+                                                                //if (data.status == false) {
+                                                                //    $('#instaDataTable').find("[data-row='" + item + "']").parent().parent().remove();
+                                                                //    totalrecord -= 1;
+                                                                //} else {
+                                                                $('table').find("[data-category='" + item + "']").html(name);
+                                                                //}
+                                                            }
+                                                        }).then(function () {
+
+                                                        })
+                                                    })
+
+                                                }, 50);
+
+                                            }
+                                            else {
+                                                setTimeout(function () {
+                                                    callback({
+                                                        draw: data.draw,
+                                                        data: out,
+                                                        recordsTotal: totalrecord,
+                                                        recordsFiltered: totalrecord
+                                                    });
+
+                                                    $('.image-popup-vertical-fit').magnificPopup({
+                                                        type: 'image',
+                                                        closeOnContentClick: true,
+                                                        mainClass: 'mfp-img-mobile',
+                                                        image: {
+                                                            verticalFit: true
+                                                        }
+                                                    });
+                                                }, 50);
+                                            }
+                                        })
+                                    }
+                                    else {
+
+                                        var last = db.collection("insta_data").orderBy("followers", "desc").limit(i);
+
+                                        last.get().then((documentSnapshotsss) => {
+                                            lastVisible = documentSnapshotsss.docs[documentSnapshotsss.docs.length - 1];
+                                            console.log("last", lastVisible.id);
+
+                                            db.collection("insta_data").orderBy("followers", "desc").startAfter(lastVisible).limit(ien).get().then((querySnapshots) => {
+                                                if (querySnapshots.size > 0) {
+
+                                                    var s = querySnapshots.docs.map(doc => {
+                                                        return doc.data();
+                                                    });
+
+                                                    s.forEach((d) => {
+                                                        if (catsList.includes(d.selected_category.cat_id)) {
+
+                                                            var key = d.id;
+
+                                                            var verified = "---";
+                                                            if (d.isverified == "N") verified = "no";
+                                                            else if (d.isverified == "Y") verified = "yes";
+
+
+                                                            var business = "---";
+                                                            if (d.isbusiness == "N") business = "no";
+                                                            else if (d.isbusiness == "Y") business = "yes";
+
+
+                                                            var gender = "---";
+                                                            if (d.gender != null && d.gender != "") {
+                                                                gender = d.gender;
+                                                            }
+
+
+                                                            if (d.photourl != "" || d.photourl != null) {
+                                                                image = d.photourl;
+                                                            }
+
+                                                            var categoryid = d.selected_category;
+                                                            if (categoryid != undefined && categoryid != null) {
+                                                                categoryid = d.selected_category.cat_id;
+                                                                !categorylist.includes(categoryid) ? categorylist.push(categoryid) : ""
+                                                            }
+
+
+                                                            out.push([`<td style="width:8%">
+                                                    <a data-row="${categoryid}" class= "image-popup-vertical-fit" href = "${image}">
+                                                    <img src="${image}" class="mr-2" width="35" height="35" /></a></td>`,
+                                                            `<td><div class="w-space-no">${d.fullname} (${d.username})</div></td>`,
+                                                            `<td>${d.instaid}</td>`,
+                                                            `<td>${gender}</td>`,
+                                                            `<td>${d.followers}</td>`, `<td>${d.following}</td>`, `<td>${d.countrycode}</td>`,
+                                                            ` <td>${d.city_name}</td>`, `<td>${verified}</td>`, `<td>${business}</td>`,
+                                                            ` <td><div data-cid="${key}"  data-category="${categoryid}">---</td>`,
+                                                            ` <td class="text-center"><a onclick="manageCategory('${key}', '${categoryid}')" class="btn Custom-Badge-Color"><i style="color:white" class="fas fa-edit"></i></a></td>`
+                                                            ]);
+                                                        }
+                                                    })
+                                                }
+                                            }).then(() => {
+
+                                                var length = categorylist.length
+                                                if (length > 0) {
+
+                                                    setTimeout(function () {
+                                                        callback({
+                                                            draw: data.draw,
+                                                            data: out,
+                                                            recordsTotal: totalrecord,
+                                                            recordsFiltered: totalrecord
+                                                        });
+
+                                                        $('.image-popup-vertical-fit').magnificPopup({
+                                                            type: 'image',
+                                                            closeOnContentClick: true,
+                                                            mainClass: 'mfp-img-mobile',
+                                                            image: {
+                                                                verticalFit: true
+                                                            }
+                                                        });
+
+                                                        categorylist.forEach(function (item) {
+                                                            db.collection("categories").doc(item).get().then((querysnapshotss) => {
+                                                                if (querysnapshotss.exists) {
+                                                                    var data = querysnapshotss.data()
+                                                                    var name = data.name
+                                                                    //if (data.status == false) {
+                                                                    //    $('#instaDataTable').find("[data-row='" + item + "']").parent().parent().remove();
+                                                                    //    totalrecord -= 1;
+                                                                    //} else {
+                                                                    $('table').find("[data-category='" + item + "']").html(name);
+                                                                    //}
+                                                                }
+                                                            }).then(function () {
+
+                                                            })
+                                                        })
+
+                                                    }, 50);
+
+                                                }
+                                                else {
+                                                    setTimeout(function () {
+                                                        callback({
+                                                            draw: data.draw,
+                                                            data: out,
+                                                            recordsTotal: totalrecord,
+                                                            recordsFiltered: totalrecord
+                                                        });
+
+                                                        $('.image-popup-vertical-fit').magnificPopup({
+                                                            type: 'image',
+                                                            closeOnContentClick: true,
+                                                            mainClass: 'mfp-img-mobile',
+                                                            image: {
+                                                                verticalFit: true
+                                                            }
+                                                        });
+                                                    }, 50);
+                                                }
+                                            })
+                                        });
+
+                                    }
+                                }
+                            })
+                        }
+                        else {
+
+                            db.collection("insta_data").orderBy("shortname")
+                                .where('shortname', ">=", serachVal.toLowerCase())
+                                .where('shortname', '<', serachVal.toLowerCase() + 'z').limit(10).get().then((querySnapshots) => {
+                                    if (querySnapshots.size > 0) {
+
+                                        var s = querySnapshots.docs.map(doc => {
+                                            return doc.data();
+                                        });
+
+                                        s.forEach((d) => {
+
+                                            if (catsList.includes(d.selected_category.cat_id)) {
+                                                var key = d.id;
+
+                                                var verified = "---";
+                                                if (d.isverified == "N") verified = "no";
+                                                else if (d.isverified == "Y") verified = "yes";
+
+
+                                                var business = "---";
+                                                if (d.isbusiness == "N") business = "no";
+                                                else if (d.isbusiness == "Y") business = "yes";
+
+
+                                                var gender = "---";
+                                                if (d.gender != null && d.gender != "") {
+                                                    gender = d.gender;
+                                                }
+
+
+                                                if (d.photourl != "" || d.photourl != null) {
+                                                    image = d.photourl;
+                                                }
+                                                //<td class="text-center"><a class="btn-sm btn-primary categorydtls px-3 py-2 cursor-pointer" data-id="${childkey}"><i class="fas fa-box" style="color:white"></i></a></td>
+
+                                                var categoryid = d.selected_category;
+                                                if (categoryid != undefined && categoryid != null) {
+                                                    categoryid = d.selected_category.cat_id;
+                                                    !categorylist.includes(categoryid) ? categorylist.push(categoryid) : ""
+                                                }
+
+
+                                                out.push([`<td style="width:8%">
+                                                        <a data-row="${categoryid}" class= "image-popup-vertical-fit" href = "${image}">
+                                                        <img src="${image}" class="mr-2" width="35" height="35" /></a></td>`,
+                                                `<td><div class="w-space-no">${d.fullname} (${d.username})</div></td>`,
+                                                `<td>${d.instaid}</td>`,
+                                                `<td>${gender}</td>`,
+                                                `<td>${d.followers}</td>`, `<td>${d.following}</td>`, `<td>${d.countrycode}</td>`,
+                                                ` <td>${d.city_name}</td>`, `<td>${verified}</td>`, `<td>${business}</td>`,
+                                                ` <td><div data-cid="${key}"  data-category="${categoryid}">---</td>`,
+                                                ` <td class="text-center"><a onclick="manageCategory('${key}', '${categoryid}')" class="btn Custom-Badge-Color"><i style="color:white" class="fas fa-edit"></i></a></td>`
+                                                ]);
+                                            }
+                                        })
+                                    }
+                                }).then(() => {
+
+                                    var length = categorylist.length
+                                    if (length > 0) {
+
+                                        setTimeout(function () {
+                                            callback({
+                                                draw: data.draw,
+                                                data: out,
+                                                recordsTotal: 10,
+                                                recordsFiltered: 10
+                                            });
+
+                                            $('.image-popup-vertical-fit').magnificPopup({
+                                                type: 'image',
+                                                closeOnContentClick: true,
+                                                mainClass: 'mfp-img-mobile',
+                                                image: {
+                                                    verticalFit: true
+                                                }
+                                            });
+
+                                            categorylist.forEach(function (item) {
+                                                db.collection("categories").doc(item).get().then((querysnapshotss) => {
+                                                    if (querysnapshotss.exists) {
+                                                        var data = querysnapshotss.data()
+                                                        var name = data.name
+                                                        //if (data.status == false) {
+                                                        //    $('#instaDataTable').find("[data-row='" + item + "']").parent().parent().remove();
+                                                        //} else {
+                                                        $('table').find("[data-category='" + item + "']").html(name);
+                                                        //}
+                                                    }
+                                                }).then(function () {
+
+                                                })
+                                            })
+
+                                        }, 50);
+
+                                    }
+                                    else {
+                                        setTimeout(function () {
+                                            callback({
+                                                draw: data.draw,
+                                                data: out,
+                                                recordsTotal: 10,
+                                                recordsFiltered: 10
+                                            });
+
+                                            $('.image-popup-vertical-fit').magnificPopup({
+                                                type: 'image',
+                                                closeOnContentClick: true,
+                                                mainClass: 'mfp-img-mobile',
+                                                image: {
+                                                    verticalFit: true
+                                                }
+                                            });
+                                        }, 50);
+                                    }
+                                })
+
+
+                            //else {
+
+                            //    var last = db.collection("insta_data").orderBy("shortname").where('shortname', ">=", serachVal.toLowerCase())
+                            //        .where('shortname', '<', serachVal.toLowerCase() + 'z').limit(i);
+
+                            //    last.get().then((documentSnapshotsss) => {
+                            //        // Get the last visible document
+                            //        lastVisible = documentSnapshotsss.docs[documentSnapshotsss.docs.length - 1];
+                            //        console.log("last", lastVisible);
+
+                            //        db.collection("insta_data").where('selected_category.status', '==', true).orderBy("shortname")
+                            //            .where('shortname', ">=", serachVal.toLowerCase())
+                            //            .where('shortname', '<', serachVal.toLowerCase() + 'z').startAfter(lastVisible).limit(ien).get().then((querySnapshots) => {
+                            //                if (querySnapshots.size > 0) {
+
+                            //                    var s = querySnapshots.docs.map(doc => {
+                            //                        return doc.data();
+                            //                    });
+
+                            //                    s.forEach((d) => {
+
+                            //                        var key = d.id;
+
+                            //                        var verified = "---";
+                            //                        if (d.isverified == "N") verified = "no";
+                            //                        else if (d.isverified == "Y") verified = "yes";
+
+
+                            //                        var business = "---";
+                            //                        if (d.isbusiness == "N") business = "no";
+                            //                        else if (d.isbusiness == "Y") business = "yes";
+
+
+                            //                        var gender = "---";
+                            //                        if (d.gender != null && d.gender != "") {
+                            //                            gender = d.gender;
+                            //                        }
+
+
+                            //                        if (d.photourl != "" || d.photourl != null) {
+                            //                            image = d.photourl;
+                            //                        }
+                            //                        //<td class="text-center"><a class="btn-sm btn-primary categorydtls px-3 py-2 cursor-pointer" data-id="${childkey}"><i class="fas fa-box" style="color:white"></i></a></td>
+
+                            //                        var categoryid = d.selected_category;
+                            //                        if (categoryid != undefined && categoryid != null) {
+                            //                            categoryid = d.selected_category.cat_id;
+                            //                            !categorylist.includes(categoryid) ? categorylist.push(categoryid) : ""
+                            //                        }
+
+
+                            //                        out.push([`<td style="width:8%">
+                            //                    <a data-row="${categoryid}" class= "image-popup-vertical-fit" href = "${image}">
+                            //                    <img src="${image}" class="mr-2" width="35" height="35" /></a></td>`,
+                            //                        `<td><div class="w-space-no">${d.fullname} (${d.username})</div></td>`,
+                            //                        `<td>${d.instaid}</td>`,
+                            //                        `<td>${gender}</td>`,
+                            //                        `<td>${d.followers}</td>`, `<td>${d.following}</td>`, `<td>${d.countrycode}</td>`,
+                            //                        ` <td>${d.city_name}</td>`, `<td>${verified}</td>`, `<td>${business}</td>`,
+                            //                        ` <td><div data-cid="${key}"  data-category="${categoryid}">---</td>`,
+                            //                        ` <td class="text-center"><a onclick="manageCategory('${key}', '${categoryid}')" class="btn Custom-Badge-Color"><i style="color:white" class="fas fa-edit"></i></a></td>`
+                            //                        ]);
+
+                            //                    })
+                            //                }
+                            //            }).then(() => {
+
+                            //                var length = categorylist.length
+                            //                if (length > 0) {
+
+                            //                    setTimeout(function () {
+                            //                        callback({
+                            //                            draw: data.draw,
+                            //                            data: out,
+                            //                            recordsTotal: totalrecord,
+                            //                            recordsFiltered: totalrecord
+                            //                        });
+
+                            //                        $('.image-popup-vertical-fit').magnificPopup({
+                            //                            type: 'image',
+                            //                            closeOnContentClick: true,
+                            //                            mainClass: 'mfp-img-mobile',
+                            //                            image: {
+                            //                                verticalFit: true
+                            //                            }
+                            //                        });
+
+                            //                        categorylist.forEach(function (item) {
+                            //                            db.collection("categories").doc(item).get().then((querysnapshotss) => {
+                            //                                if (querysnapshotss.exists) {
+                            //                                    var data = querysnapshotss.data()
+                            //                                    var name = data.name
+                            //                                    //if (data.status == false) {
+                            //                                    //    $('#instaDataTable').find("[data-row='" + item + "']").parent().parent().remove();
+                            //                                    //    totalrecord -= 1;
+                            //                                    //} else {
+                            //                                    $('table').find("[data-category='" + item + "']").html(name);
+                            //                                    //}
+                            //                                }
+                            //                            }).then(function () {
+
+                            //                            })
+                            //                        })
+
+                            //                    }, 50);
+
+                            //                }
+                            //                else {
+                            //                    setTimeout(function () {
+                            //                        callback({
+                            //                            draw: data.draw,
+                            //                            data: out,
+                            //                            recordsTotal: totalrecord,
+                            //                            recordsFiltered: totalrecord
+                            //                        });
+
+                            //                        $('.image-popup-vertical-fit').magnificPopup({
+                            //                            type: 'image',
+                            //                            closeOnContentClick: true,
+                            //                            mainClass: 'mfp-img-mobile',
+                            //                            image: {
+                            //                                verticalFit: true
+                            //                            }
+                            //                        });
+                            //                    }, 50);
+                            //                }
+                            //            })
+                            //    });
+                            //}
+                        }
+                    })
+                  
+                },
+                scrollY: "400px",
+                scrollCollapse: true,
+                scrollX: true,
+                fixedColumns: {
+                    left: 1,
+                },
+                "lengthMenu": [[10, 25], [10, 25]],
+                "pagingType": "simple",
+                "bFilter": false
+            });
+
+        //Append Category
+        AppendCategory();
+    }
+    function GetCategoriesDetail(categoryList) {
+        var length = categoryList.length
+        categoryList.forEach(function (item) {
+
+            db.collection("categories").doc(item).get().then((querySnapshot) => {
+                if (querySnapshot.exists) {
+                    var data = querySnapshot.data()
+                    var name = data.name
+                    $(`#instaDataTableBody`).find(`[data-category = ${item}]`).html(name);
+                }
+            }).then(function () {
+                length--
+                if (length == 0) {
+                    var table = $('#instaDataTable').DataTable({
+
+                        scrollY: "400px",
+                        scrollCollapse: true,
+                        scrollX: true,
+                        fixedColumns: {
+                            left: 2,
+                        },
+                        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+                    });
+                    $.fn.dataTable.ext.search.pop();
+                    table.draw();
+                    $('.image-popup-vertical-fit').magnificPopup({
+                        type: 'image',
+                        closeOnContentClick: true,
+                        mainClass: 'mfp-img-mobile',
+                        image: {
+                            verticalFit: true
+                        }
+
+                    });
+                }
+            })
+        })
+    }
+    //Append category
+    function AppendCategory() {
+        $("#category-select").html("");
+
+        db.collection("categories").where('category_type','==',0).get().then((querySnapshot) => {
+            if (querySnapshot.size > 0) {
+                $("#category-select").html("");
+
+                $("#category-select").append(`<option value="" disabled selected>Select Category</option>`);
+                querySnapshot.forEach(function (docSnapshot) {
+                    $("#category-select").append(`<option value="${docSnapshot.id}">${docSnapshot.data().name}</option>`);
+                })
+            }
+        }).catch(function (error) {
+            console.log("Error Getting Documnets", error)
+        })
+    }
+
+    function manageCategory(id, categoryId) {
+        $('#key').val(id);
+
+        if (categoryId != "undefined") {
+            //Set make select box value
+            $(`#category-select option[value=${categoryId}]`).attr('selected', 'selected');
+            $("#category-select").val(categoryId).change();
+        }
+        else {
+            $("#category-select").val($("#category-select option:first").val());
+        }
+
+        $('#category-error').html('');
+        $("#model-al").modal('show');
+    }
+
+
+    function editCategory() {
+        var id = $('#key').val();
+        var category = $('#category-select').val();
+
+        if (CheckNullUndefined(category)) { $('#category-error').html('category is required'); return false }
+        else { $('#category-error').html(''); }
+
+        var tags = [];
+        $('#addCategoryButton').css('pointer-events', 'none')
+
+        db.collection("categories").doc(category).get().then((doc) => {
+            if (doc.exists) {
+                var data = doc.data();
+
+                for (var i = 0; i < data.tags.length; i++) {
+                    var tag = {
+                        color: data.tags[i].color,
+                        count: data.tags[i].count,
+                        font_family: data.tags[i].font_family,
+                        id: data.tags[i].id,
+                        name: data.tags[i].name,
+                    }
+                    tags.push(tag);
+                }
+
+                var postData = {
+                    cat_id: data.cat_id,
+                    color: data.color,
+                    name: data.name,
+                    status: data.status,
+                    tags: tags,
+                    url: data.url
+                };
+
+
+                //var instaRef = firebase.database().ref('insta_data/post' + id);
+                //instaRef.update(
+                //    {
+                //        'selected_category': postData,
+                //    })
+
+                db.collection("insta_data").doc(id).update({
+                    'selected_category': postData,
+                }).then(() => {
+                    $('#addCategoryButton').css('pointer-events', 'all')
+                    swal.fire('Update!',
+                        'User Category updated.',
+                        'success');
+                    $('#model-al').modal('hide');
+                    $('table').find("[data-cid='" + id + "']").html(data.name);
+                }).catch(function (error) {
+                    $('#addCategoryButton').css('pointer-events', 'all')
+                    console.log("Error getting documents: ", error);
+                });
+            }
+        }).catch(function (error) {
+            console.log("Error Getting Documnets", error)
+        })
+
+
+    }
+
+    $("#all").click(function () {
+
+        var table = $('#usertable').DataTable();
+        $.fn.dataTable.ext.search.pop();
+        table.draw();
+        $.fn.dataTable.ext.search.push(
+            function (settings, data, dataIndex) {
+                return $(table.row(dataIndex).node()).attr('data-attribute') == 1 || 2;
+            }
+        );
+        table.draw();
+
+    });
+    $("#active").click(function () {
+
+        var table = $('#usertable').DataTable();
+        $.fn.dataTable.ext.search.pop();
+        table.draw();
+        $.fn.dataTable.ext.search.push(
+            function (settings, data, dataIndex) {
+                return $(table.row(dataIndex).node()).attr('data-attribute') == 1;
+            }
+        );
+        table.draw();
+    });
+    $("#block").click(function () {
+
+        var table = $('#usertable').DataTable();
+        $.fn.dataTable.ext.search.pop();
+        table.draw();
+        $.fn.dataTable.ext.search.push(
+            function (settings, data, dataIndex) {
+                return $(table.row(dataIndex).node()).attr('data-attribute') == 2;
+            }
+        );
+        table.draw();
+    });
+
+</script>

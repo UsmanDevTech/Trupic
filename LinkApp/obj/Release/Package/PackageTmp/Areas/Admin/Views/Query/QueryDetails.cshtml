@@ -1,0 +1,299 @@
+﻿
+@{
+    ViewBag.Title = "QueryDetails";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row clearfix">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="card">
+                    <div class="header">
+                        <h2>
+                            <strong>Queries</strong> Detail
+                        </h2>
+                        <ul class="header-dropdown m-r--5">
+                            <li class="dropdown">
+                                <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                   aria-haspopup="true" aria-expanded="false">
+                                    <i class="material-icons">more_vert</i>
+                                </a>
+                                <ul class="dropdown-menu pull-right" style="width: max-content;">
+                                    <li>
+                                        <a id="all" href="javascript:void(0);">All</a>
+                                    </li>
+                                    <li>
+                                        <a id="pending" href="javascript:void(0);">Pending</a>
+                                    </li>
+                                    <li>
+                                        <a id="resolved" href="javascript:void(0);">Resolved</a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped table-hover dataTable" id="example_4">
+                                <thead style="white-space:nowrap" >
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Message</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="divtbl" style="white-space:nowrap" >
+                                </tbody>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="" class="modal fade bs-example-modal-md" id="Msg" tabindex="-1" role="dialog" aria-labelledby="Msg" aria-hidden="true">
+            <div class="modal-dialog modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="formModal">Message</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p id="p1"></p>
+                            </div>
+
+                        </div>
+                     
+                    </div>
+                </div>
+            </div><!-- /.modal -->
+        </div>
+
+    </div>
+</section>
+
+<script>
+
+    $('#Query').addClass("active");
+ 
+    $(function () {
+
+        var i = 1;
+        $('#example_4').DataTable().destroy();
+        $("#divtbl").html('');
+
+
+        var userId = [];
+        db.collection("ContactUs")
+            .get().then(function (doc) {
+                doc.forEach(function (item) {
+
+                    if (item.data() != null) {
+
+                        if (item.data().status == "pending") {
+
+                            $("#divtbl").append('<tr data-attribute="2"><td >' + i + '</td><td ><div class="d-flex flex-row"><a class="image-popup-vertical-fit" data-hrefPic="' + item.data().userId + '"> <img data-pic="' + item.data().userId + '" class=" mr-2 max_height_width" width="30" height="30"/> </a><div data-name="' + item.data().userId + '" style="text-align: center; margin-top: 5px;" class="w-space-no"></div></div></td><td >' + item.data().email + '</td><td ><a href="#" style="padding: 7px 15px;" class="btn-sm btn-primary open-AddBookDialog" data-toggle="modal" data-id="' + item.data().message + '"><i class="fas fa-eye" style="color:white"></i></a></td><td ><div><span class="badge bg-warning shadow-style text-white rounded border-0 mr-1">Pending</span><button onclick="Resolve(\'' + item.id + '\',\'' + item.data().userId + '\')" style="background-color: rgb(0 0 0 / 10%); border: none; padding: 3px; color: white; border-radius: 5px; outline: none;" class="far fa-edit"></button></div></td></tr>');
+                            i = i + 1;
+
+                            if (!userId.includes(item.data().userId)) {
+                                userId.push(item.data().userId);
+                            }
+                        }
+                        else if (item.data().status == "resolved") {
+                            $("#divtbl").append('<tr data-attribute="1"><td >' + i + '</td><td ><div class="d-flex flex-row"><a class="image-popup-vertical-fit" data-hrefPic="' + item.data().userId + '"> <img data-pic="' + item.data().userId + '" class=" mr-2 max_height_width" width="30" height="30"/> </a><div data-name="' + item.data().userId + '" style="text-align: center; margin-top: 5px;" class="w-space-no"></div></div></td><td >' + item.data().email + '</td><td ><a href="#" style="padding: 7px 15px;" class="btn-sm btn-primary open-AddBookDialog" data-toggle="modal" data-id="' + item.data().message + '"><i class="fas fa-eye" style="color:white"></i></a></td><td ><span  class="badge Custom-Badge-Color shadow-style text-white rounded border-0">Resolved</span></td></tr>');
+                            i = i + 1;
+                            if (!userId.includes(item.data().userId)) {
+                                userId.push(item.data().userId);
+                            }
+                        }
+                    }
+
+                });
+
+            }).then(function () {
+                newFunction(userId);
+            })
+            .catch(function (error) {
+                console.log("Error getting documents: ", error);
+            });
+    })
+
+    $(document).on("click", ".open-AddBookDialog", function () {
+        var message = $(this).data('id');
+        document.getElementById("p1").innerHTML = message;
+
+        $('#Msg').modal("show");
+
+    });
+
+    function Resolve(elem, user) {
+
+
+        swal.fire({
+            title: 'Are you sure, you want to resolve the query?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, Resolve it!'
+
+        })
+            .then((result) => {
+                if (result.isConfirmed) {
+                    db.collection("ContactUs").doc(elem).update({
+                        status: "resolved",
+                    })
+                        .then(() => {
+                            query_Notification(user);
+
+                            swal.fire('Resolved!',
+                                'Query is resolved.',
+                                'success').then(function () {
+                                    location.reload();
+                                });
+
+                            console.log("Document successfully written!");
+                        })
+                        .catch((error) => {
+                            console.error("Error writing document: ", error);
+                        });
+
+                }
+
+
+                else {
+                    console.log("Out of Action");
+                    swal.fire('Cancelled!',
+                        'Request is Cancelled.',
+                        'success');
+                }
+            });
+    }
+
+
+    function newFunction(UserId) {
+        var image = "/Content/assets/images/user/usericon.png";
+  
+        db.collection("Users")
+            .get()
+            .then(function (doc) {
+                doc.forEach(function (item) {
+
+                    var id = item.id;
+
+                    if (UserId.includes(id)) {
+
+                        $("#divtbl").find("[data-name='" + id + "']").text(item.data().fullName);
+
+                        if (item.data().profileImage == "") {
+                            $("#divtbl").find("[data-pic='" + id + "']").attr("src", image);
+                            $("#divtbl").find("[data-hrefPic='" + id + "']").attr("href", image);
+                        }
+                        else if (item.data().profileImage != "") {
+                            $("#divtbl").find("[data-pic='" + id + "']").attr("src", item.data().profileImage);
+                            $("#divtbl").find("[data-hrefPic='" + id + "']").attr("href", item.data().profileImage);
+                        }
+                    }
+
+                });
+            })
+            .then(function () {
+                var table = $('#example_4').DataTable({ "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]] });
+                $.fn.dataTable.ext.search.pop();
+                table.draw();
+
+                $('.image-popup-vertical-fit').magnificPopup({
+                    type: 'image',
+                    closeOnContentClick: true,
+                    mainClass: 'mfp-img-mobile',
+                    image: {
+                        verticalFit: true
+                    }
+
+                });
+            })
+            .catch(function (error) {
+                console.log("Error getting documents: ", error);
+            });
+    }
+
+
+    $("#all").click(function () {
+
+        var table = $('#example_4').DataTable();
+        $.fn.dataTable.ext.search.pop();
+        table.draw();
+        $.fn.dataTable.ext.search.push(
+            function (settings, data, dataIndex) {
+                return $(table.row(dataIndex).node()).attr('data-attribute') == 1 || 2;
+            }
+        );
+        table.draw();
+
+    });
+    $("#resolved").click(function () {
+
+        var table = $('#example_4').DataTable();
+        $.fn.dataTable.ext.search.pop();
+        table.draw();
+        $.fn.dataTable.ext.search.push(
+            function (settings, data, dataIndex) {
+                return $(table.row(dataIndex).node()).attr('data-attribute') == 1;
+            }
+        );
+        table.draw();
+    });
+    $("#pending").click(function () {
+
+        var table = $('#example_4').DataTable();
+        $.fn.dataTable.ext.search.pop();
+        table.draw();
+        $.fn.dataTable.ext.search.push(
+            function (settings, data, dataIndex) {
+                return $(table.row(dataIndex).node()).attr('data-attribute') == 2;
+            }
+        );
+        table.draw();
+    });
+
+    function query_Notification(user) {
+        var fcm = "";
+
+        db.collection('Users').doc(user).get().then(function (doc) {
+            var data = doc.data();
+            if (doc.exists) {
+                fcm = data.token;
+            }
+
+        }).then(() => {
+            $.ajax({
+                url: '/Admin/PushNotification/SendMessageToClient?Fcm=' + fcm + '&body=' + "Your query is resolved" + '&title=' + "Query Resolved",
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                data: "{}",
+                dataType: "json",
+                success: function (data) {
+                    console.log(data);
+
+                },
+                error: function (error) {
+                    console.log(error);
+                    return error;
+                },
+            });
+
+        })
+            .catch((error) => {
+                console.error("Error writing document: ", error);
+            });
+    }
+
+</script>

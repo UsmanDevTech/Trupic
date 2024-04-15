@@ -1,0 +1,441 @@
+﻿
+@{
+    ViewBag.Title = "AdminProfile";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="block-header">
+            <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    <ul class="breadcrumb breadcrumb-style ">
+                        <li class="breadcrumb-item">
+                            <h4 class="page-title">Profile</h4>
+                        </li>
+                        <li class="breadcrumb-item bcrumb-1">
+                            <a>
+                                <i class="fas fa-home"></i> Profile
+                            </a>
+                        </li>
+
+                        <li class="breadcrumb-item active">Admin Profile</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- Your content goes here  -->
+        <div class="row clearfix">
+            <div class="col-lg-4 col-md-12">
+                <div class="card">
+                    <div class="m-b-20">
+                        <div class="contact-grid">
+                            <div class="profile-header Custom-Color-Background">
+                                <div class="user-name admin_name"></div>
+                                <div class="name-center">Trupic Admin</div>
+                            </div>
+
+                            <input type="file" accept="image/*" name="imageFile" id="file" onchange="loadFile(event)" style="display: none" />
+
+                            <label for="file" style="cursor: pointer;">
+
+                                <span style="border-radius:50%;margin-left: 18px;position:absolute;width:30px;height:30px;">
+                                    <img src="~/Content/assets/images/Image Upload Icon/photo.svg" width="28" style="padding-bottom:5px" />
+                                </span>
+
+                                <img src="" class="user-img" id="output" width="100" height="100" style=" border-radius: 50%; display: block; border: 1px solid silver;" />
+                            </label>
+
+                            <div class="author-box-name">
+                                <a id="submitButton5" class="btn btn-primary" onclick="loadfile()" style="margin-top: 5px; padding-top: 8px;">Upload Photo</a>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-lg-8 col-md-12">
+                <div class="card">
+                    <div class="profile-tab-box">
+                        <div class="p-l-20">
+                            <ul class="nav ">
+                                <li class="nav-item tab-all">
+                                    <a class="nav-link active show" href="#project" data-toggle="tab">Profile</a>
+                                </li>
+                                <li class="nav-item tab-all p-l-20">
+                                    <a class="nav-link" href="#usersettings" data-toggle="tab">Settings</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane active" id="project" aria-expanded="true">
+                        <div class="card">
+                            <div class="header">
+                                <h2>
+                                    <strong>Profile</strong>
+                                </h2>
+                            </div>
+                            <div class="body">
+                                <div class="form-row">
+                                    <div class="col-md-12">
+                                        <input type="text" class="form-control" style="font-size: 13px;" id="name">
+                                    </div>
+
+                                </div>
+                                <button id="submitButton4" onclick="updateName()" style="margin-top: -3px" class="btn btn-primary btn-round float-right">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div role="tabpanel" class="tab-pane" id="usersettings" aria-expanded="false">
+                        <div class="card">
+                            <div class="header">
+                                <h2>
+                                    <strong>Settings</strong> 
+                                </h2>
+                            </div>
+                            <div class="body">
+
+                                <div class="form-row">
+
+                                    <div class="col-md-6">
+                                        <input type="password" class="form-control" style="font-size: 13px;" name="NewPassword" id="NewPassword" placeholder="New Password" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="password" class="form-control" style="font-size: 13px;" name="ConfirmPassword" id="ConfirmPassword" placeholder="Confirm Password" required>
+                                    </div>
+                                </div>
+
+                                <button id="submitButton3" onclick="updatePassword()" class="btn btn-primary btn-round float-right" style="margin-top: -3px">Save Changes</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    
+
+    $(function () {
+        loadfunction();
+    })
+
+    function loadfunction() {
+        firebase.auth().onAuthStateChanged(function (user) {
+            if (user) {
+
+                var photoUrl, name;
+               
+                db.collection("user").where("email", "==", user.email)
+                    .get()
+                    .then(function (doc) {
+                        doc.forEach(function (item) {
+                            name = item.data().first_name + " " + item.data().last_name;
+                            photoUrl = item.data().profile_pic;
+
+                        });
+
+                        $('#name').val(name);
+                        $('.admin_name').html(name);
+                        $('.admin_pic').attr("src", photoUrl);
+                        $('#output').attr("src", photoUrl);
+
+                    })
+                    .catch(function (error) {
+                        console.log("Error getting documents: ", error);
+                    });
+
+            } else {
+                console.log("No user is signed in.")
+            }
+        });
+
+    }
+
+
+
+
+    function loadfile() {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        var user = firebase.auth().currentUser;
+        var userId = user.uid;
+
+        var logo = $("#file").val();
+
+        if (logo != "") {
+
+            var logo_file = $("#file").get(0).files[0];
+            var filename = (+new Date()) + '-' + logo_file.name;
+            var metadata = { contentType: logo_file.type };
+            var storageRef = firebase.storage();
+            var task = storageRef.ref('Profile/' + userId + '/' + file.name).put(logo_file, metadata);
+
+            task.on('state_changed',
+                function progress(snapshot) {
+
+                },
+                function error(err) {
+                    console.log("Warning", err, "error", 6000);
+                },
+                function complete() {
+                    task.snapshot.ref.getDownloadURL()
+                        .then(function (downloadURL) {
+                            logo = downloadURL;
+                            photoUpdate(logo);
+                        })
+                });
+
+            $('#submitButton5').html("");
+            $('#submitButton5').addClass("btn-progress2");
+
+
+        }
+        else {
+            Toast.fire({
+                icon: 'warning',
+                title: 'Please select picture to Upload!'
+            })
+        }
+    }
+
+    function photoUpdate(logo) {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+        var user = firebase.auth().currentUser;
+        var url;
+        var userId = user.uid;
+
+        db.collection("user").where('email','==',user.email).get().then(function (doc) {
+            doc.forEach(function (item) {
+                url = item.data().profile_pic;
+             })
+        }).then(function () {
+            ///
+            //var httpsReference = storageRef.refFromURL(url);
+            //let fileName = httpsReference.name;
+            //var urls = 'Profile/' + user.uid + '/' + fileName;
+            //alert(urls);
+            //// Delete the file
+            //var desertRef = storageRef.ref().child('Profile/' + user.uid + '/' + fileName);
+            //desertRef.delete().then(() => {
+
+            //    db.collection("user").doc(userId).update({
+            //        profile_pic: logo,
+            //    }).then(() => {
+            //        Toast.fire({
+            //            icon: 'success',
+            //            title: 'Profile picture Updated!'
+            //        })
+
+            //        $('#submitButton5').removeClass("btn-progress2");
+            //        $('#submitButton5').html("Upload Photo");
+                    
+            //        loadfunction();
+            //    }).catch((error) => {
+            //        console.error("Error writing document: ", error);
+            //    });
+
+            //}).catch((error) => {
+            //    // Uh-oh, an error occurred!
+            //});
+         ///
+            db.collection("user").doc(userId).update({
+                profile_pic: logo,
+            }).then(() => {
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Profile picture Updated!'
+                })
+
+                $('#submitButton5').removeClass("btn-progress2");
+                $('#submitButton5').html("Upload Photo");
+
+                loadfunction();
+            }).catch((error) => {
+                console.error("Error writing document: ", error);
+            });
+        }).catch(function (error) {
+                console.log("Error getting documents: ", error);
+        });
+    }
+
+    function updateName() {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+        var name = $('#name').val();
+
+        if (name.trim() == "") {
+            Toast.fire({
+                icon: 'warning',
+                title: 'please provide name!'
+            })
+        }
+        else {
+
+            $('#submitButton4').html("");
+            $('#submitButton4').addClass("btn-progress2");
+
+            const nameArray = name.split(" ");
+
+            var first_name = nameArray[0];
+            var last_name = nameArray[1];
+
+            $('#submitButton4').html("Save Changes");
+            $('#submitButton4').removeClass("btn-progress2");
+
+            var user = firebase.auth().currentUser;
+            db.collection("user").doc(user.uid).update({
+                first_name: first_name,
+                last_name: last_name,
+            }).then(() => {
+
+                Toast.fire({
+                     icon: 'success',
+                     title: 'Name Updated Successfully!'
+                })
+
+                $('#submitButton4').removeClass("btn-progress2");
+                $('#submitButton4').html("Save Changes");
+             
+
+                loadfunction();
+             }).catch((error) => {
+                 console.error("Error writing document: ", error);
+             });
+
+        }
+    }
+    function updatePassword() {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+        $('#submitButton3').html("");
+        $('#submitButton3').addClass("btn-progress2");
+
+        var password = $('#NewPassword').val();
+        var Confirm_password = $('#ConfirmPassword').val();
+
+        if (Confirm_password == "" || password == "") {
+
+            Toast.fire({
+                icon: 'warning',
+                title: 'Please fill all password fields!'
+            })
+
+            $('#submitButton3').removeClass("btn-progress2");
+            $('#submitButton3').html("Save Changes");
+
+            $('#ConfirmPassword').val("");
+            $('#ConfirmPassword').attr("placeholder", "Confirm Password");
+            $('#NewPassword').val("");
+            $('#NewPassword').attr("placeholder", "New Password");
+
+        }
+        else if (Confirm_password != password) {
+
+            Toast.fire({
+                icon: 'warning',
+                title: 'Password provided does not match!'
+            })
+
+            $('#submitButton3').removeClass("btn-progress2");
+            $('#submitButton3').html("Save Changes");
+
+
+            $('#ConfirmPassword').val("");
+            $('#ConfirmPassword').attr("placeholder", "Confirm Password");
+            $('#NewPassword').val("");
+            $('#NewPassword').attr("placeholder", "New Password");
+        }
+
+        else {
+            var user = firebase.auth().currentUser;
+
+            user.updatePassword(password).then(function () {
+
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Password Updated Successfully!'
+                })
+                $('#submitButton3').removeClass("btn-progress2");
+                $('#submitButton3').html("Save Changes");
+
+                loadfunction();
+            }).catch(function (error) {
+
+                Toast.fire({
+                    icon: 'error',
+                    title: error
+                })
+
+                $('#submitButton3').removeClass("btn-progress2");
+                $('#submitButton3').html("Save Changes");
+
+                window.location.href = "@Url.Action("SignIn", "Login")";
+                });
+        }
+    }
+
+    $(".toggle-password").on('click', function () {
+        $(this).toggleClass("fa-eye fa-eye-slash");
+        var input = $($(this).attr("toggle"));
+        if (input.attr("type") == "password") {
+            input.attr("type", "text");
+        } else {
+            input.attr("type", "password");
+        }
+    });
+
+</script>
+
+<script>
+
+    var loadFile = function (event) {
+        var image = document.getElementById("output");
+        image.src = URL.createObjectURL(event.target.files[0]);
+    };
+</script>

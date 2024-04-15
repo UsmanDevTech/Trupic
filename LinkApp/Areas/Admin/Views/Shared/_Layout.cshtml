@@ -1,0 +1,463 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <title>Trupic</title>
+    <!-- Favicon-->
+    <link rel="icon" href="~/Content/assets/images/LOGO/logo.png" type="image/x-icon">
+    <!-- Plugins Core Css -->
+    <link href="~/Content/assets/css/app.min.css" rel="stylesheet">
+    <!-- Custom Css -->
+    <link href="~/Content/assets/Magnific-Popup-master/dist/magnific-popup.css" rel="stylesheet" />
+    <link href="~/Content/assets/css/style.css" rel="stylesheet" />
+    <link href="~/Content/assets/css/sweetalert2.min.css" rel="stylesheet" />
+    <link href="~/Content/assets/summernote/summernote-bs4.css" rel="stylesheet" />
+    <!-- Theme style. You can choose a theme from css/themes instead of get all themes -->
+    <link href="~/Content/assets/css/styles/all-themes.css" rel="stylesheet" />
+    <link href="~/Content/assets/lightgallery/dist/css/lightgallery.css" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/fixedcolumns/4.0.1/css/fixedColumns.dataTables.min.css" rel="stylesheet" />
+
+    <script src="https://www.gstatic.com/firebasejs/8.2.10/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.10/firebase-database.js"></script>
+
+    <!-- Add Firebase products that you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.10/firebase-auth.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.2.10/firebase-storage.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.2.10/firebase-firestore.js"></script>
+
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+
+    <script src="~/Content/assets/js/firebaseScript.js"></script>
+
+    <style>
+        .mfp-bg {
+            z-index: 9999999 !important;
+        }
+
+        .mfp-wrap {
+            z-index: 9999999 !important;
+        }
+
+        .Active {
+            display: block;
+        }
+
+        .block {
+            display: none;
+        }
+
+
+        .btn-progress1 {
+            position: relative !important;
+            background-image: url(../../../../Content/assets/images/LOGO/spinner-white.svg);
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-size: 25px !important;
+            color: transparent !important;
+            pointer-events: none !important;
+            padding: 18px 26.5px !important;
+        }
+
+        .btn-progress2 {
+            position: relative !important;
+            background-image: url(../../../../Content/assets/images/LOGO/spinner-white.svg);
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-size: 25px !important;
+            color: transparent !important;
+            pointer-events: none !important;
+            padding: 18px 60.5px !important;
+        }
+
+        .footer {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: #f1f2f7;
+            color: #777;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .Custom-Color {
+            color: #621383 !important;
+            /*color: rgb(210,211,213) !important;
+            color: linear-gradient(90deg, rgba(210,211,213,0.6533963927367823) 35%, rgba(210,211,213,1) 100%) !important;*/
+        }
+
+        .Custom-Badge-Color {
+            background-color: #67e965;
+        }
+
+        .Custom-Badge-Color {
+            background-color: #67e965;
+        }
+
+        .Custom-Color-Background {
+            background-color: #621383 !important;
+        }
+
+        table.dataTable img {
+            -webkit-box-shadow: 0 5px 15px 0 rgb(105 103 103 / 50%);
+            box-shadow: 0 5px 15px 0 rgb(105 103 103 / 50%);
+            border: 2px solid #ffffff;
+            border-radius: 10px;
+        }
+
+        .card_Image {
+            -webkit-box-shadow: 0 5px 15px 0 rgb(105 103 103 / 50%);
+            box-shadow: 0 5px 15px 0 rgb(105 103 103 / 50%);
+            border: 2px solid #ffffff;
+            border-radius: 2px;
+        }
+
+        .card-icon {
+            line-height: 90px;
+        }
+
+        .card-icon {
+            width: 82px;
+            height: 80px;
+            margin: 13px 10px;
+            border-radius: 50%;
+            line-height: 94px;
+            text-align: center;
+            float: left;
+            margin-right: 15px;
+        }
+
+        .loading {
+            top: 50%;
+            left: 50%;
+            width: 80px;
+            height: 80px;
+            margin: -60px 0 20px -20px;
+        }
+
+        @@media (max-width:1169px) {
+            #second_gif {
+                display: block !important;
+            }
+
+            #first_gif {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="light">
+    <!-- Page Loader -->
+    <div class="page-loader-wrapper">
+        <div class="loader">
+            <div class="m-t-30">
+                <img class="loading" src="~/Content/assets/images/LOGO/logo.png" />
+            </div>
+
+        </div>
+    </div>
+    <!-- #END# Page Loader -->
+    <!-- Overlay For Sidebars -->
+    <div class="overlay"></div>
+    <!-- #END# Overlay For Sidebars -->
+    <!-- Top Bar -->
+    <nav class="navbar">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a href="#" onClick="return false;" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse"
+                   aria-expanded="false"></a>
+                <a href="#" onClick="return false;" class="bars"></a>
+                <a class="navbar-brand">
+                    <img id="first_gif" class="Active m-auto" src="~/Content/assets/images/LOGO/logo.png" height="55" />
+                    <img id="second_gif" class="block m-auto" src="~/Content/assets/images/LOGO/logo.png" height="35" />
+                </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar-collapse">
+                <ul class="nav navbar-nav navbar-left">
+                    <li>
+                        <a href="#" id="side_close" onClick="return false;" class="sidemenu-collapse">
+                            <i class="nav-hdr-btn ti-align-left"></i>
+                        </a>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown user_profile" style="cursor:pointer">
+                        <div class="dropdown-toggle" data-toggle="dropdown">
+                            <img class="admin_pic" src="" width="32" height="32" />
+                        </div>
+                        <ul class="dropdown-menu pullDown">
+                            <li class="body">
+                                <ul class="user_dw_menu">
+                                    <li>
+                                        <a href="@Url.Action("AdminProfile","Profile")">
+                                            <i class="material-icons Custom-Color">person</i>Profile
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a onclick="signOut()">
+                                            <i class="material-icons Custom-Color">power_settings_new</i>Logout
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <!-- #END# Tasks -->
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- #Top Bar -->
+    <div>
+        <!-- Left Sidebar -->
+        <aside id="leftsidebar" class="sidebar">
+            <!-- Menu -->
+            <div class="menu">
+                <ul class="list">
+                    <li>
+                        <div class="sidebar-profile clearfix">
+                            <div class="profile-img">
+                                <img class="admin_pic" />
+                            </div>
+                            <div class="profile-info">
+                                <h3 class="admin_name"></h3>
+                                <p>Welcome Admin !</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="header mt-n3">-- Main</li>
+
+                    <li id="dash_li">
+                        <a href="@Url.Action("Dashboard","Main")">
+                            <i class="fas fa-desktop"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+
+                    <li class="header">-- Management</li>
+
+                    <li id="user_li">
+                        <a href="@Url.Action("Details","User")">
+                            <i class="fas fa-users"></i>
+                            <span style="padding-left:3px">Users</span>
+                        </a>
+                    </li>
+                    <li id="insta_user_li">
+                        <a href="@Url.Action("instaData","Post")">
+                            <i class="fas fa-users"></i>
+                            <span style="padding-left:3px">Insta Users</span>
+                        </a>
+                    </li>
+
+                    <li id="post_li">
+                        <a href="@Url.Action("Posts","Main")">
+                            <i class="fas fa-shapes"></i>
+                            <span class="pl-1">Posts</span>
+                        </a>
+                    </li>
+
+                    <li id="category_li">
+                        <a href="@Url.Action("Category","Post")">
+                            <i class="fas fa-ellipsis-v"></i>
+                            <span class="pl-3">Categories</span>
+                        </a>
+                    </li>
+                    <li id="design_li">
+                        <a href="@Url.Action("Design","Post")">
+                            <i class="fas fa-ellipsis-v"></i>
+                            <span class="pl-3">Design</span>
+                        </a>
+                    </li>
+                    <li id="fonts_li">
+                        <a href="@Url.Action("Fonts","Post")">
+                            <i class="fas fa-flag"></i>
+                            <span class="pl-1">Fonts</span>
+                        </a>
+                    </li>
+
+                    <li id="earnings_li">
+                        <a href="@Url.Action("Earnings","Main")">
+                            <i class="fas fa-hand-holding-usd"></i>
+                            <span class="pl-1">Earnings</span>
+                        </a>
+                    </li>
+
+                    <li id="category_li" hidden>
+                        <a href="@Url.Action("EventCategory","Event")">
+                            <i class="fas fa-flag"></i>
+                            <span class="pl-1">Reported Posts</span>
+                        </a>
+                    </li>
+
+
+                </ul>
+            </div>
+            <!-- #Menu -->
+        </aside>
+    </div>
+    @RenderBody()
+    <!-- Plugins Js -->
+    <script src="~/Content/assets/js/app.min.js"></script>
+    <script src="~/Content/assets/js/table.min.js"></script>
+    <script src="~/Content/assets/js/form.min.js"></script>
+    <!-- Custom Js -->
+    <script src="~/Content/assets/js/admin.js"></script>
+    <script src="~/Content/assets/js/pages/forms/basic-form-elements.js"></script>
+
+    <script src="~/Content/assets/js/pages/tables/jquery-datatable.js"></script>
+    <script src="~/Content/assets/js/sweet-alerts.init.js"></script>
+    <script src="~/Content/assets/js/sweetalert2.min.js"></script>
+    <script src="~/Content/assets/summernote/summernote-bs4.js"></script>
+    @*<script src="~/Content/assets/js/pages/forms/advanced-form-elements.js"></script>*@
+    <script src="~/Content/assets/js/pages/index.js"></script>
+    <script src="~/Content/assets/lightgallery/dist/js/lightgallery-all.js"></script>
+    <script src="~/Content/assets/Magnific-Popup-master/dist/jquery.magnific-popup-init.js"></script>
+    <script src="~/Content/assets/Magnific-Popup-master/dist/jquery.magnific-popup.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedcolumns/4.0.1/js/dataTables.fixedColumns.min.js"></script>
+    <script src="~/Content/assets/select2/dist/js/select2.full.min.js"></script>
+    <script>
+
+        $(function () {
+
+        firebase.auth().onAuthStateChanged(function (user) {
+                if (user) {
+
+                    var name, photoUrl;
+
+                    db.collection("user").where("user_id", "==", user.uid).where("role", "==", 0)
+                        .get()
+                        .then(function (doc) {
+                            doc.forEach(function (item) {
+
+                                if (item == null) {
+                                    window.location.href = "/Admin/Login/SignIn";
+                                }
+                                else {
+                                    name = item.data().first_name+" "+item.data().last_name;
+                                    photoUrl = item.data().profile_pic;
+
+                                    $('.admin_name').text(name);
+                                    $('.admin_pic').attr("src", photoUrl);
+                                }
+
+
+                            });
+                        })
+                        .catch(function (error) {
+                            console.log("Error getting documents: ", error);
+                        });
+
+                } else {
+
+                    var crrUrl = '@Request.RawUrl';
+                    window.location.href = '/Admin/Login/SignIn?url=' + crrUrl;
+
+                }
+            });
+        });
+
+        $('#side_close').click(function () {
+
+            if ($('#first_gif').hasClass("Active")) {
+                $('#second_gif').removeClass("block");
+                $('#second_gif').addClass("Active");
+
+                $('#first_gif').removeClass("Active");
+                $('#first_gif').addClass("block");
+            }
+
+            else if ($('#first_gif').hasClass("block")) {
+                $('#second_gif').removeClass("Active");
+                $('#second_gif').addClass("block");
+
+                $('#first_gif').removeClass("block");
+                $('#first_gif').addClass("Active");
+            }
+
+
+        })
+        function signOut() {
+            firebase.auth().signOut().then(() => {
+                window.location.href = "/Admin/Login/SignIn";
+            }).catch((error) => {
+                console.log(error);
+            });
+        }
+
+
+        function CheckNullUndefined(value) {
+            return typeof value == 'string' && !value.trim() || typeof value == 'undefined' || value === null || value == "";
+        }
+
+
+        function importData() {
+
+            var batch = db.batch();
+            var count = 0;
+            var firstCount = 0;
+            $.ajax({
+                url: "../../trupic-feac9-default-rtdb-export.json",
+                dataType: "json",
+                success: function (data) {
+                    var list = data.insta_data.post;
+                    list = Object.entries(list);
+                    list.forEach(function (arrayItem) {
+
+                        if (firstCount > 142499) {
+
+                            if (count < 500) {
+
+                                var docRef = db.collection("insta_data").doc();
+                                var shortname = arrayItem[1].fullname.replace(/\s+/g, "");
+                                shortname = shortname.toLowerCase();
+
+                                var map = {
+                                    "id": docRef.id,
+                                    "shortname": shortname,
+                                    "selected_category": null,
+                                    "category": arrayItem[1].category,
+                                    "category_rapid": arrayItem[1].category_rapid,
+                                    "city_name": arrayItem[1].city_name,
+                                    "countrycode": arrayItem[1].countrycode,
+                                    "followers": arrayItem[1].followers,
+                                    "following": arrayItem[1].following,
+                                    "fullname": arrayItem[1].fullname,
+                                    "gender": arrayItem[1].gender,
+                                    "instaid": arrayItem[1].instaid,
+                                    "isbusiness": arrayItem[1].isbusiness,
+                                    "isverified": arrayItem[1].isverified,
+                                    "photourl": arrayItem[1].photourl,
+                                    "username": arrayItem[1].username,
+                                    "whatsapp_number": arrayItem[1].whatsapp_number
+                                };
+
+                                batch.set(docRef, map);
+                                count++;
+                            }
+                            else {
+                                batch.commit().then(() => {
+
+                                });
+                                batch = db.batch();
+                                count = 0;
+                            }
+                        }
+                        firstCount++;
+                    })
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log('ERROR', textStatus, errorThrown);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
